@@ -25,6 +25,10 @@ class _HomeState extends State<Home> {
   var faveritBookModels = <BookModel>[]; // for ยอดนิยม
   var newBookModels = <BookModel>[]; // for มาใหม่
 
+  var docForYouBooks = <String>[];
+  var docFaveritBooks = <String>[];
+  var docNewBooks = <String>[];
+
   @override
   void initState() {
     super.initState();
@@ -34,11 +38,15 @@ class _HomeState extends State<Home> {
   Future<void> readAllBook() async {
     await FirebaseFirestore.instance.collection('book').get().then((value) {
       for (var item in value.docs) {
+        String docBook = item.id;
+        docForYouBooks.add(docBook);
+
         BookModel bookModel = BookModel.fromMap(item.data());
         setState(() {
           forYouBookModels.add(bookModel);
           if (newBookModels.length <= 3) {
             newBookModels.add(bookModel);
+            docNewBooks.add(docBook);
           }
         });
       }
@@ -79,7 +87,7 @@ class _HomeState extends State<Home> {
                     context,
                     MaterialPageRoute(
                       builder: (context) =>
-                          BorrowBook(bookModel: forYouBookModels[index]),
+                          BorrowBook(bookModel: forYouBookModels[index], docBook: docForYouBooks[index],),
                     )),
                 child: Card(
                   child: Padding(
