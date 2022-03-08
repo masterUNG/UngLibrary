@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:unglibrary/models/book_model.dart';
 import 'package:unglibrary/models/borrow_book_model.dart';
 import 'package:unglibrary/models/borrow_user_model.dart';
+import 'package:unglibrary/states/show_list_reecive_book.dart';
 import 'package:unglibrary/states/show_progress.dart';
 import 'package:unglibrary/utility/my_constant.dart';
 import 'package:unglibrary/widgets/show_button.dart';
@@ -72,22 +73,7 @@ class _HistoryState extends State<History> {
               bookModels.add(bookModel);
             });
 
-            await FirebaseFirestore.instance
-                .collection('book')
-                .doc(borrowUserModel.docBook)
-                .collection('borrow')
-                .where('status', isEqualTo: true)
-                .get()
-                .then((value) {
-              print('## value ==> ${value.docs}');
-
-              if (value.docs.isNotEmpty) {
-                for (var item in value.docs) {
-                  docIdBookWhereTrue = item.id;
-                  print('## docIdBookWhereTrue   ==> $docIdBookWhereTrue');
-                }
-              }
-            });
+  
           }
         }
 
@@ -95,6 +81,8 @@ class _HistoryState extends State<History> {
           load = false;
         });
       });
+
+      // otheo thread
     });
   }
 
@@ -105,84 +93,143 @@ class _HistoryState extends State<History> {
           ? const Center(child: ShowProgress())
           : haveData!
               ? LayoutBuilder(builder: (context, constrained) {
-                  return ListView.builder(
-                    itemCount: borrowUserModels.length,
-                    itemBuilder: (context, index) => Card(
-                      child: Row(
-                        children: [
-                          SizedBox(
-                            width: 112,
-                            height: 200,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: CachedNetworkImage(
-                                  imageUrl: bookModels[index].cover),
-                            ),
-                          ),
-                          SizedBox(
-                            width: constrained.maxWidth - 120,
-                            height: 200,
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ShowText(
-                                    text: bookModels[index].title,
-                                    textStyle: MyConstant().h2Style(),
+                  return SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        ShowButton(
+                            width: constrained.maxWidth,
+                            label: 'แสดงหนังสือที่จองไว้',
+                            pressFunc: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ShowListReceiveBook(),
+                                ))),
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: ScrollPhysics(),
+                          itemCount: borrowUserModels.length,
+                          itemBuilder: (context, index) => Card(
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 112,
+                                  height: 200,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: CachedNetworkImage(
+                                        imageUrl: bookModels[index].cover),
                                   ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      ShowText(
-                                        text: showBorrow(
-                                            borrowUserModels[index].status),
-                                      ),
-                                      borrowUserModels[index].status
-                                          ? ShowButton(
-                                              label: 'คืนหนังสือ',
-                                              pressFunc: () async {
-                                                Map<String, dynamic> data1 = {};
-                                                data1['status'] = false;
+                                ),
+                                SizedBox(
+                                  width: constrained.maxWidth - 120,
+                                  height: 200,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        ShowText(
+                                          text: bookModels[index].title,
+                                          textStyle: MyConstant().h2Style(),
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            ShowText(
+                                              text: showBorrow(
+                                                  borrowUserModels[index]
+                                                      .status),
+                                            ),
+                                            borrowUserModels[index].status
+                                                ? ShowButton(
+                                                    label: 'คืนหนังสือ',
+                                                    pressFunc: () async {
+                                                      Map<String, dynamic>
+                                                          data1 = {};
+                                                      data1['status'] = false;
 
-                                                await FirebaseFirestore.instance
-                                                    .collection('user')
-                                                    .doc(docUser)
-                                                    .collection('borrow')
-                                                    .doc(docBorrowUsers[index])
-                                                    .update(data1)
-                                                    .then((value) async {
-                                                  print(
-                                                      '## doc book11 ==>> ${borrowUserModels[index].docBook}');
+                                                      print(
+                                                          '#### docIdBorrowUser ${docBorrowUsers[index]}');
 
-                                                  print(
-                                                      '## doc book22 ==>> $docIdBookWhereTrue');
+                                                      await FirebaseFirestore
+                                                          .instance
+                                                          .collection('book')
+                                                          .doc(borrowUserModels[
+                                                                  index]
+                                                              .docBook)
+                                                          .collection('borrow')
+                                                          .get()
+                                                          .then((value) {
+                                                        print(
+                                                            '#### docIdBook ${borrowUserModels[index].docBook}');
 
-                                                  await FirebaseFirestore
-                                                      .instance
-                                                      .collection('book')
-                                                      .doc(borrowUserModels[
-                                                              index]
-                                                          .docBook)
-                                                      .collection('borrow')
-                                                      .doc(docIdBookWhereTrue)
-                                                      .update(data1)
-                                                      .then((value) =>
-                                                          findUserAndReadBook());
-                                                });
-                                              })
-                                          : const SizedBox(),
-                                    ],
-                                  )
-                                ],
-                              ),
+                                                        print(
+                                                            value.docs.length);
+
+                                                        for (var item
+                                                            in value.docs) {
+                                                          BorrowBookModel
+                                                              borrowBookModel =
+                                                              BorrowBookModel
+                                                                  .fromMap(item
+                                                                      .data());
+                                                          print(
+                                                              '#### status ${item.id} ===>> ${borrowBookModel.status}');
+
+                                                          if (borrowBookModel
+                                                              .status) {
+                                                            docIdBookWhereTrue =
+                                                                item.id;
+                                                          }
+                                                        }
+                                                      });
+
+                                                      print(
+                                                          '#### docIdBorrowBookTrue ===== $docIdBookWhereTrue');
+
+                                                      await FirebaseFirestore
+                                                          .instance
+                                                          .collection('user')
+                                                          .doc(docUser)
+                                                          .collection('borrow')
+                                                          .doc(docBorrowUsers[
+                                                              index])
+                                                          .update(data1)
+                                                          .then((value) async {
+
+                                                        await FirebaseFirestore
+                                                            .instance
+                                                            .collection('book')
+                                                            .doc(
+                                                                borrowUserModels[
+                                                                        index]
+                                                                    .docBook)
+                                                            .collection(
+                                                                'borrow')
+                                                            .doc(
+                                                                docIdBookWhereTrue)
+                                                            .update(data1)
+                                                            .then((value) =>
+                                                                findUserAndReadBook());
+                                                      });
+                                                    })
+                                                : const SizedBox(),
+                                          ],
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   );
                 })

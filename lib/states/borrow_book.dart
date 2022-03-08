@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:unglibrary/models/book_model.dart';
 import 'package:unglibrary/models/borrow_book_model.dart';
 import 'package:unglibrary/models/borrow_user_model.dart';
+import 'package:unglibrary/models/reserve_model.dart';
+import 'package:unglibrary/states/show_list_reecive_book.dart';
 import 'package:unglibrary/states/show_progress.dart';
 import 'package:unglibrary/utility/my_constant.dart';
 import 'package:unglibrary/utility/my_dialog.dart';
@@ -228,7 +230,10 @@ class _BorrowBookState extends State<BorrowBook> {
           .collection('borrow')
           .doc()
           .set(borrowBookModel.toMap())
-          .then((value) => Navigator.pop(context));
+          .then((value) {
+       
+        Navigator.pop(context);
+      });
     });
   }
 
@@ -254,8 +259,30 @@ class _BorrowBookState extends State<BorrowBook> {
               title: 'Confirm Reserve Book',
               message: 'คุณต้องการจอง ${bookModel!.title} ',
               urlBook: bookModel!.cover,
-              okFunc: () {
+              okFunc: () async {
                 Navigator.pop(context);
+
+                ReserveModel reserveModel = ReserveModel(
+                    cover: bookModel!.cover,
+                    docBook: docBook!,
+                    endDate: borrowBookModel.endDate,
+                    nameBook: bookModel!.title,
+                    status: true);
+
+                await FirebaseFirestore.instance
+                    .collection('user')
+                    .doc(docUser)
+                    .collection('reserve')
+                    .doc()
+                    .set(reserveModel.toMap())
+                    .then((value) {
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ShowListReceiveBook(),
+                      ));
+                });
               });
         }
       }
