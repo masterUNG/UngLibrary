@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:unglibrary/models/book_model.dart';
+import 'package:unglibrary/models/borrow_book_model.dart';
 import 'package:unglibrary/models/borrow_user_model.dart';
 import 'package:unglibrary/states/show_progress.dart';
 import 'package:unglibrary/utility/my_constant.dart';
@@ -26,7 +27,8 @@ class _HistoryState extends State<History> {
   var borrowUserModels = <BorrowUserModel>[];
   var bookModels = <BookModel>[];
   var docBorrowUsers = <String>[];
-  var docBorrowBooks = <String>[];
+
+  String? docIdBookWhereTrue;
 
   @override
   void initState() {
@@ -38,9 +40,8 @@ class _HistoryState extends State<History> {
     borrowUserModels.clear();
     bookModels.clear();
     docBorrowUsers.clear();
-    docBorrowBooks.clear();
 
-     FirebaseAuth.instance.authStateChanges().listen((event) async {
+    FirebaseAuth.instance.authStateChanges().listen((event) async {
       docUser = event!.uid;
       await FirebaseFirestore.instance
           .collection('user')
@@ -75,11 +76,16 @@ class _HistoryState extends State<History> {
                 .collection('book')
                 .doc(borrowUserModel.docBook)
                 .collection('borrow')
+                .where('status', isEqualTo: true)
                 .get()
                 .then((value) {
-              for (var item in value.docs) {
-                String docBorrowBook = item.id;
-                docBorrowBooks.add(docBorrowBook);
+              print('## value ==> ${value.docs}');
+
+              if (value.docs.isNotEmpty) {
+                for (var item in value.docs) {
+                  docIdBookWhereTrue = item.id;
+                  print('## docIdBookWhereTrue   ==> $docIdBookWhereTrue');
+                }
               }
             });
           }
@@ -149,6 +155,12 @@ class _HistoryState extends State<History> {
                                                     .doc(docBorrowUsers[index])
                                                     .update(data1)
                                                     .then((value) async {
+                                                  print(
+                                                      '## doc book11 ==>> ${borrowUserModels[index].docBook}');
+
+                                                  print(
+                                                      '## doc book22 ==>> $docIdBookWhereTrue');
+
                                                   await FirebaseFirestore
                                                       .instance
                                                       .collection('book')
@@ -156,8 +168,7 @@ class _HistoryState extends State<History> {
                                                               index]
                                                           .docBook)
                                                       .collection('borrow')
-                                                      .doc(
-                                                          docBorrowBooks[index])
+                                                      .doc(docIdBookWhereTrue)
                                                       .update(data1)
                                                       .then((value) =>
                                                           findUserAndReadBook());
