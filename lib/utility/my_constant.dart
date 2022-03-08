@@ -9,6 +9,7 @@ class MyConstant {
 
   static String routeAuthen = '/authen';
   static String routeCreateAccount = '/createAccount';
+  static String routeMyService = '/myService';
 
   BoxDecoration primaryBox() => BoxDecoration(color: primary.withOpacity(0.75));
 
