@@ -5,7 +5,6 @@ import 'package:unglibrary/models/book_model.dart';
 import 'package:unglibrary/states/borrow_book.dart';
 import 'package:unglibrary/states/show_progress.dart';
 import 'package:unglibrary/states/show_title.dart';
-import 'package:unglibrary/utility/my_constant.dart';
 import 'package:unglibrary/widgets/show_button.dart';
 import 'package:unglibrary/widgets/show_form.dart';
 import 'package:unglibrary/widgets/show_logo.dart';
@@ -36,20 +35,34 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> readAllBook() async {
-    await FirebaseFirestore.instance.collection('book').get().then((value) {
+    await FirebaseFirestore.instance
+        .collection('book')
+        .get()
+        .then((value) async {
       for (var item in value.docs) {
         String docBook = item.id;
         docForYouBooks.add(docBook);
 
         BookModel bookModel = BookModel.fromMap(item.data());
-        setState(() {
-          forYouBookModels.add(bookModel);
-          if (newBookModels.length <= 3) {
+        forYouBookModels.add(bookModel);
+
+        await FirebaseFirestore.instance
+            .collection('book')
+            .doc(item.id)
+            .collection('borrow')
+            .get()
+            .then((value) {
+          if ((value.docs.isNotEmpty)) {
+            faveritBookModels.add(bookModel);
+            docFaveritBooks.add(docBook);
+          } else {
             newBookModels.add(bookModel);
             docNewBooks.add(docBook);
           }
         });
       }
+
+      setState(() {});
     });
   }
 
@@ -86,8 +99,10 @@ class _HomeState extends State<Home> {
                 onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          BorrowBook(bookModel: forYouBookModels[index], docBook: docForYouBooks[index],),
+                      builder: (context) => BorrowBook(
+                        bookModel: forYouBookModels[index],
+                        docBook: docForYouBooks[index],
+                      ),
                     )),
                 child: Card(
                   child: Padding(
@@ -115,28 +130,38 @@ class _HomeState extends State<Home> {
   SizedBox newFaveritListView() {
     return SizedBox(
       height: 200,
-      child: forYouBookModels.isEmpty
+      child: faveritBookModels.isEmpty
           ? const ShowProgress()
           : ListView.builder(
               scrollDirection: Axis.horizontal,
               physics: const ClampingScrollPhysics(),
               shrinkWrap: true,
-              itemCount: newBookModels.length,
-              itemBuilder: (context, index) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: 120,
-                        height: 150,
-                        child: CachedNetworkImage(
-                            errorWidget: (context, url, error) =>
-                                const ShowLogo(),
-                            imageUrl: newBookModels[index].cover),
+              itemCount: faveritBookModels.length,
+              itemBuilder: (context, index) => InkWell(
+                onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BorrowBook(
+                        bookModel: faveritBookModels[index],
+                        docBook: docFaveritBooks[index],
                       ),
-                      ShowText(text: cutWord(newBookModels[index].title)),
-                    ],
+                    )),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          height: 150,
+                          child: CachedNetworkImage(
+                              errorWidget: (context, url, error) =>
+                                  const ShowLogo(),
+                              imageUrl: faveritBookModels[index].cover),
+                        ),
+                        ShowText(text: cutWord(faveritBookModels[index].title)),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -147,28 +172,38 @@ class _HomeState extends State<Home> {
   SizedBox newListView() {
     return SizedBox(
       height: 200,
-      child: forYouBookModels.isEmpty
+      child: newBookModels.isEmpty
           ? const ShowProgress()
           : ListView.builder(
               scrollDirection: Axis.horizontal,
               physics: const ClampingScrollPhysics(),
               shrinkWrap: true,
               itemCount: newBookModels.length,
-              itemBuilder: (context, index) => Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        width: 120,
-                        height: 150,
-                        child: CachedNetworkImage(
-                            errorWidget: (context, url, error) =>
-                                const ShowLogo(),
-                            imageUrl: newBookModels[index].cover),
+              itemBuilder: (context, index) => InkWell(
+                 onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BorrowBook(
+                        bookModel: newBookModels[index],
+                        docBook: docNewBooks[index],
                       ),
-                      ShowText(text: cutWord(newBookModels[index].title)),
-                    ],
+                    )),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          width: 120,
+                          height: 150,
+                          child: CachedNetworkImage(
+                              errorWidget: (context, url, error) =>
+                                  const ShowLogo(),
+                              imageUrl: newBookModels[index].cover),
+                        ),
+                        ShowText(text: cutWord(newBookModels[index].title)),
+                      ],
+                    ),
                   ),
                 ),
               ),

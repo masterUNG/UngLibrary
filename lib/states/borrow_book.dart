@@ -37,7 +37,7 @@ class _BorrowBookState extends State<BorrowBook> {
 
   @override
   void initState() {
-    // TODO: implement initState
+   
     super.initState();
     bookModel = widget.bookModel;
     docBook = widget.docBook;
@@ -59,41 +59,43 @@ class _BorrowBookState extends State<BorrowBook> {
         title: const Text('ยืม จอง หนังสือ'),
       ),
       body: Center(
-        child: Column(
-          children: [
-            newCover(),
-            ShowText(
-              text: bookModel!.title,
-              textStyle: MyConstant().h2Style(),
-            ),
-            const SizedBox(
-              height: 16,
-            ),
-            newDetail(title: 'ผู้เขียน :', detail: bookModel!.author),
-            newDetail(title: 'Publisher :', detail: bookModel!.publisher),
-            newDetail(title: 'Category :', detail: bookModel!.bookCatetory),
-            newDetail(title: 'Code :', detail: bookModel!.bookCode),
-            newDetail(title: 'จำนวนหน้า :', detail: bookModel!.numberOfPage),
-            newDetail(title: 'Detail :', detail: bookModel!.detail),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                ShowButton(
-                  label: 'ยืม',
-                  pressFunc: () {
-                    processCheck();
-                  },
-                ),
-                ShowButton(
-                  label: 'จอง',
-                  pressFunc: () {
-                    checkReserve();
-                  },
-                  primaryColor: Colors.red.shade200,
-                ),
-              ],
-            ),
-          ],
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              newCover(),
+              ShowText(
+                text: bookModel!.title,
+                textStyle: MyConstant().h2Style(),
+              ),
+              const SizedBox(
+                height: 16,
+              ),
+              newDetail(title: 'ผู้เขียน :', detail: bookModel!.author),
+              newDetail(title: 'Publisher :', detail: bookModel!.publisher),
+              newDetail(title: 'Category :', detail: bookModel!.bookCatetory),
+              newDetail(title: 'Code :', detail: bookModel!.bookCode),
+              newDetail(title: 'จำนวนหน้า :', detail: bookModel!.numberOfPage),
+              newDetail(title: 'Detail :', detail: bookModel!.detail),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  ShowButton(
+                    label: 'ยืม',
+                    pressFunc: () {
+                      processCheck();
+                    },
+                  ),
+                  ShowButton(
+                    label: 'จอง',
+                    pressFunc: () {
+                      checkReserve();
+                    },
+                    primaryColor: Colors.red.shade200,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
